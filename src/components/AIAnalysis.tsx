@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Brain, Camera, Upload, Loader, CheckCircle, AlertTriangle, Info } from 'lucide-react';
+import { X, Brain, Upload, Loader, CheckCircle, AlertTriangle, Info, Camera } from 'lucide-react';
 import { Crop } from '../types';
 
 interface AIAnalysisProps {
@@ -8,23 +8,13 @@ interface AIAnalysisProps {
 }
 
 interface AnalysisResult {
-  healthScore: number;
-  diseaseDetection: {
-    detected: boolean;
-    diseases: string[];
-    confidence: number;
-  };
+  overallCondition: 'Excellent' | 'Good' | 'Fair' | 'Poor';
+  freshness: number;
+  ripeness: number;
+  shelfLife: number;
+  confidence: number;
+  detectedIssues: string[];
   recommendations: string[];
-  marketPrediction: {
-    expectedPrice: number;
-    demandLevel: 'Low' | 'Medium' | 'High';
-    bestHarvestTime: string;
-  };
-  environmentalFactors: {
-    soilHealth: number;
-    weatherImpact: string;
-    pestRisk: 'Low' | 'Medium' | 'High';
-  };
 }
 
 const AIAnalysis: React.FC<AIAnalysisProps> = ({ crop, onClose }) => {
@@ -32,7 +22,7 @@ const AIAnalysis: React.FC<AIAnalysisProps> = ({ crop, onClose }) => {
   const [imagePreview, setImagePreview] = useState<string>('');
   const [analyzing, setAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
-  const [analysisType, setAnalysisType] = useState<'disease' | 'health' | 'market'>('disease');
+  const [cropType, setCropType] = useState('Apple');
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -52,60 +42,43 @@ const AIAnalysis: React.FC<AIAnalysisProps> = ({ crop, onClose }) => {
     // Simulate AI processing time
     await new Promise(resolve => setTimeout(resolve, 3000));
     
-    // Generate mock AI analysis results
+    // Generate mock AI analysis results based on crop type
     const mockResult: AnalysisResult = {
-      healthScore: Math.floor(Math.random() * 30) + 70, // 70-100
-      diseaseDetection: {
-        detected: Math.random() > 0.7,
-        diseases: Math.random() > 0.7 ? ['Leaf Blight', 'Powdery Mildew'] : [],
-        confidence: Math.floor(Math.random() * 20) + 80 // 80-100
-      },
+      overallCondition: ['Excellent', 'Good', 'Fair'][Math.floor(Math.random() * 3)] as any,
+      freshness: Math.floor(Math.random() * 30) + 70, // 70-100
+      ripeness: Math.floor(Math.random() * 30) + 70, // 70-100
+      shelfLife: Math.floor(Math.random() * 10) + 3, // 3-12 days
+      confidence: Math.floor(Math.random() * 20) + 80, // 80-100
+      detectedIssues: Math.random() > 0.7 ? ['Very minor blemishes', 'Slight overripening'] : [],
       recommendations: [
-        'Increase watering frequency by 20%',
-        'Apply organic fertilizer rich in nitrogen',
-        'Monitor for pest activity in the next 7 days',
-        'Consider companion planting with marigolds',
-        'Harvest within 2-3 weeks for optimal quality'
+        'Good for immediate sale or processing',
+        'Monitor closely for deterioration',
+        'Consider 10-15% price reduction',
+        'Best used within 2-3 days'
       ],
-      marketPrediction: {
-        expectedPrice: Math.floor(Math.random() * 50) + 25, // $25-75 per kg
-        demandLevel: ['Low', 'Medium', 'High'][Math.floor(Math.random() * 3)] as 'Low' | 'Medium' | 'High',
-        bestHarvestTime: 'Next 2-3 weeks'
-      },
-      environmentalFactors: {
-        soilHealth: Math.floor(Math.random() * 30) + 70, // 70-100
-        weatherImpact: 'Favorable conditions expected',
-        pestRisk: ['Low', 'Medium', 'High'][Math.floor(Math.random() * 3)] as 'Low' | 'Medium' | 'High'
-      }
     };
     
     setAnalysisResult(mockResult);
     setAnalyzing(false);
   };
 
-  const getHealthScoreColor = (score: number) => {
+  const getScoreColor = (score: number) => {
     if (score >= 90) return 'text-green-600';
     if (score >= 70) return 'text-yellow-600';
     return 'text-red-600';
   };
 
-  const getDemandLevelColor = (level: string) => {
-    switch (level) {
-      case 'High': return 'text-green-600 bg-green-100';
-      case 'Medium': return 'text-yellow-600 bg-yellow-100';
-      case 'Low': return 'text-red-600 bg-red-100';
+  const getConditionColor = (condition: string) => {
+    switch (condition) {
+      case 'Excellent': return 'text-green-600 bg-green-100';
+      case 'Good': return 'text-blue-600 bg-blue-100';
+      case 'Fair': return 'text-yellow-600 bg-yellow-100';
+      case 'Poor': return 'text-red-600 bg-red-100';
       default: return 'text-gray-600 bg-gray-100';
     }
   };
 
-  const getRiskLevelColor = (risk: string) => {
-    switch (risk) {
-      case 'Low': return 'text-green-600 bg-green-100';
-      case 'Medium': return 'text-yellow-600 bg-yellow-100';
-      case 'High': return 'text-red-600 bg-red-100';
-      default: return 'text-gray-600 bg-gray-100';
-    }
-  };
+  const cropTypes = ['Apple', 'Banana', 'Orange', 'Tomato', 'Potato', 'Onion', 'Carrot', 'Wheat', 'Rice'];
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -113,7 +86,7 @@ const AIAnalysis: React.FC<AIAnalysisProps> = ({ crop, onClose }) => {
         <div className="flex justify-between items-center p-6 border-b border-gray-200">
           <div className="flex items-center space-x-2">
             <Brain className="h-6 w-6 text-purple-600" />
-            <h2 className="text-2xl font-bold text-gray-800">AI Crop Analysis</h2>
+            <h2 className="text-2xl font-bold text-gray-800">AI Crop Condition Analysis</h2>
           </div>
           <button
             onClick={onClose}
@@ -136,37 +109,20 @@ const AIAnalysis: React.FC<AIAnalysisProps> = ({ crop, onClose }) => {
             </div>
           )}
 
-          {/* Analysis Type Selection */}
+          {/* Crop Type Selection */}
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 mb-3">
-              Select Analysis Type
+              Select Crop Type
             </label>
-            <div className="flex space-x-4">
-              {[
-                { value: 'disease', label: 'Disease Detection', icon: AlertTriangle },
-                { value: 'health', label: 'Health Assessment', icon: CheckCircle },
-                { value: 'market', label: 'Market Analysis', icon: Info }
-              ].map(({ value, label, icon: Icon }) => (
-                <label
-                  key={value}
-                  className={`flex items-center space-x-2 p-3 border rounded-lg cursor-pointer transition-all ${
-                    analysisType === value
-                      ? 'border-purple-500 bg-purple-50 ring-2 ring-purple-500 ring-opacity-20'
-                      : 'border-gray-300 hover:border-purple-300'
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    value={value}
-                    checked={analysisType === value}
-                    onChange={(e) => setAnalysisType(e.target.value as any)}
-                    className="text-purple-600 focus:ring-purple-500"
-                  />
-                  <Icon className="h-4 w-4 text-purple-600" />
-                  <span className="font-medium text-gray-800">{label}</span>
-                </label>
+            <select
+              value={cropType}
+              onChange={(e) => setCropType(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            >
+              {cropTypes.map(type => (
+                <option key={type} value={type}>{type}</option>
               ))}
-            </div>
+            </select>
           </div>
 
           {/* Image Upload */}
@@ -194,7 +150,7 @@ const AIAnalysis: React.FC<AIAnalysisProps> = ({ crop, onClose }) => {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <Upload className="h-12 w-12 text-gray-400 mx-auto" />
+                  <Camera className="h-12 w-12 text-gray-400 mx-auto" />
                   <div>
                     <label className="cursor-pointer">
                       <span className="text-purple-600 hover:text-purple-700 font-medium">
@@ -209,7 +165,7 @@ const AIAnalysis: React.FC<AIAnalysisProps> = ({ crop, onClose }) => {
                       />
                     </label>
                   </div>
-                  <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                  <p className="text-xs text-gray-500">Upload a clear image of your crop for analysis</p>
                 </div>
               )}
             </div>
@@ -230,7 +186,7 @@ const AIAnalysis: React.FC<AIAnalysisProps> = ({ crop, onClose }) => {
               ) : (
                 <>
                   <Brain className="h-5 w-5" />
-                  <span>Start AI Analysis</span>
+                  <span>Analyze Condition</span>
                 </>
               )}
             </button>
@@ -245,58 +201,75 @@ const AIAnalysis: React.FC<AIAnalysisProps> = ({ crop, onClose }) => {
                   <span>Analysis Complete</span>
                 </h3>
 
-                {/* Health Score */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                {/* Overall Condition */}
+                <div className="mb-6 text-center">
+                  <div className="mb-4">
+                    <span className={`inline-block px-4 py-2 rounded-full text-lg font-bold ${getConditionColor(analysisResult.overallCondition)}`}>
+                      {analysisResult.overallCondition}
+                    </span>
+                  </div>
+                  <p className="text-gray-600">Overall Condition Assessment</p>
+                </div>
+
+                {/* Detailed Scores */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                   <div className="bg-white border border-gray-200 rounded-lg p-4">
-                    <h4 className="font-semibold text-gray-700 mb-2">Health Score</h4>
-                    <div className={`text-3xl font-bold ${getHealthScoreColor(analysisResult.healthScore)}`}>
-                      {analysisResult.healthScore}%
+                    <h4 className="font-semibold text-gray-700 mb-2">Freshness</h4>
+                    <div className={`text-3xl font-bold ${getScoreColor(analysisResult.freshness)}`}>
+                      {analysisResult.freshness}%
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
                       <div
                         className={`h-2 rounded-full ${
-                          analysisResult.healthScore >= 90 ? 'bg-green-500' :
-                          analysisResult.healthScore >= 70 ? 'bg-yellow-500' : 'bg-red-500'
+                          analysisResult.freshness >= 90 ? 'bg-green-500' :
+                          analysisResult.freshness >= 70 ? 'bg-yellow-500' : 'bg-red-500'
                         }`}
-                        style={{ width: `${analysisResult.healthScore}%` }}
+                        style={{ width: `${analysisResult.freshness}%` }}
                       ></div>
                     </div>
                   </div>
 
                   <div className="bg-white border border-gray-200 rounded-lg p-4">
-                    <h4 className="font-semibold text-gray-700 mb-2">Soil Health</h4>
-                    <div className={`text-3xl font-bold ${getHealthScoreColor(analysisResult.environmentalFactors.soilHealth)}`}>
-                      {analysisResult.environmentalFactors.soilHealth}%
+                    <h4 className="font-semibold text-gray-700 mb-2">Ripeness</h4>
+                    <div className={`text-3xl font-bold ${getScoreColor(analysisResult.ripeness)}`}>
+                      {analysisResult.ripeness}%
                     </div>
-                    <p className="text-sm text-gray-600 mt-1">{analysisResult.environmentalFactors.weatherImpact}</p>
+                    <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                      <div
+                        className={`h-2 rounded-full ${
+                          analysisResult.ripeness >= 90 ? 'bg-green-500' :
+                          analysisResult.ripeness >= 70 ? 'bg-yellow-500' : 'bg-red-500'
+                        }`}
+                        style={{ width: `${analysisResult.ripeness}%` }}
+                      ></div>
+                    </div>
                   </div>
 
-                  <div className="bg-white border border-gray-200 rounded-lg p-4">
-                    <h4 className="font-semibold text-gray-700 mb-2">Market Demand</h4>
-                    <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${getDemandLevelColor(analysisResult.marketPrediction.demandLevel)}`}>
-                      {analysisResult.marketPrediction.demandLevel}
-                    </span>
-                    <p className="text-lg font-bold text-gray-800 mt-2">
-                      ${analysisResult.marketPrediction.expectedPrice}/kg
-                    </p>
+                  <div className="bg-white border border-gray-200 rounded-lg p-4 md:col-span-2">
+                    <h4 className="font-semibold text-gray-700 mb-2">Shelf Life & Confidence</h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-2xl font-bold text-orange-600">{analysisResult.shelfLife} days</p>
+                        <p className="text-sm text-gray-600">Estimated shelf life</p>
+                      </div>
+                      <div>
+                        <p className="text-2xl font-bold text-purple-600">{analysisResult.confidence}%</p>
+                        <p className="text-sm text-gray-600">Analysis confidence</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                {/* Disease Detection */}
-                {analysisResult.diseaseDetection.detected && (
-                  <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-                    <h4 className="font-semibold text-red-800 mb-2 flex items-center space-x-2">
+                {/* Detected Issues */}
+                {analysisResult.detectedIssues.length > 0 && (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                    <h4 className="font-semibold text-yellow-800 mb-2 flex items-center space-x-2">
                       <AlertTriangle className="h-5 w-5" />
-                      <span>Disease Detection Alert</span>
+                      <span>Detected Issues</span>
                     </h4>
                     <div className="space-y-2">
-                      {analysisResult.diseaseDetection.diseases.map((disease, index) => (
-                        <div key={index} className="flex items-center justify-between">
-                          <span className="text-red-700 font-medium">{disease}</span>
-                          <span className="text-sm text-red-600">
-                            {analysisResult.diseaseDetection.confidence}% confidence
-                          </span>
-                        </div>
+                      {analysisResult.detectedIssues.map((issue, index) => (
+                        <p key={index} className="text-yellow-700">• {issue}</p>
                       ))}
                     </div>
                   </div>
@@ -304,7 +277,7 @@ const AIAnalysis: React.FC<AIAnalysisProps> = ({ crop, onClose }) => {
 
                 {/* Recommendations */}
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                  <h4 className="font-semibold text-blue-800 mb-3">AI Recommendations</h4>
+                  <h4 className="font-semibold text-blue-800 mb-3">Recommendations</h4>
                   <ul className="space-y-2">
                     {analysisResult.recommendations.map((recommendation, index) => (
                       <li key={index} className="flex items-start space-x-2">
@@ -315,21 +288,14 @@ const AIAnalysis: React.FC<AIAnalysisProps> = ({ crop, onClose }) => {
                   </ul>
                 </div>
 
-                {/* Environmental Factors */}
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                  <h4 className="font-semibold text-green-800 mb-3">Environmental Assessment</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-green-700 mb-1">Pest Risk Level</p>
-                      <span className={`inline-block px-2 py-1 rounded text-sm font-medium ${getRiskLevelColor(analysisResult.environmentalFactors.pestRisk)}`}>
-                        {analysisResult.environmentalFactors.pestRisk}
-                      </span>
-                    </div>
-                    <div>
-                      <p className="text-sm text-green-700 mb-1">Best Harvest Time</p>
-                      <p className="font-medium text-green-800">{analysisResult.marketPrediction.bestHarvestTime}</p>
-                    </div>
-                  </div>
+                {/* Analysis Summary */}
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                  <h4 className="font-semibold text-gray-800 mb-2">Analysis Summary</h4>
+                  <p className="text-sm text-gray-700">
+                    Based on the uploaded image, your {cropType.toLowerCase()} shows {analysisResult.overallCondition.toLowerCase()} condition 
+                    with {analysisResult.freshness}% freshness and {analysisResult.ripeness}% ripeness. 
+                    The estimated shelf life is {analysisResult.shelfLife} days.
+                  </p>
                 </div>
               </div>
             </div>
@@ -351,13 +317,13 @@ const AIAnalysis: React.FC<AIAnalysisProps> = ({ crop, onClose }) => {
                   const url = URL.createObjectURL(blob);
                   const a = document.createElement('a');
                   a.href = url;
-                  a.download = `ai-analysis-${crop?.name || 'crop'}-${new Date().toISOString().split('T')[0]}.json`;
+                  a.download = `crop-analysis-${cropType}-${new Date().toISOString().split('T')[0]}.json`;
                   a.click();
                   URL.revokeObjectURL(url);
                 }}
                 className="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
               >
-                Export Report
+                Download Report
               </button>
             )}
           </div>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Upload, Calendar, Wheat, Beaker, ImageIcon } from 'lucide-react';
+import { X, Upload, Calendar, Wheat, Beaker, Image as ImageIcon } from 'lucide-react';
 import { Crop } from '../types';
 
 interface CropFormProps {
@@ -41,11 +41,18 @@ const CropForm: React.FC<CropFormProps> = ({ crop, onClose, onSave }) => {
       
       // If a file was selected, convert to base64 for local storage
       if (imageFile) {
-        const reader = new FileReader();
         finalImageUrl = await new Promise((resolve) => {
+          const reader = new FileReader();
           reader.onload = (e) => resolve(e.target?.result as string);
           reader.readAsDataURL(imageFile);
         });
+      }
+
+      // Validate required fields
+      if (!formData.name || !formData.crop_type || !formData.harvest_date || !formData.expiry_date || !formData.soil_type) {
+        setError('Please fill in all required fields');
+        setLoading(false);
+        return;
       }
 
       if (crop) {
@@ -237,6 +244,7 @@ const CropForm: React.FC<CropFormProps> = ({ crop, onClose, onSave }) => {
                   }}
                 />
               </div>
+
             )}
           </div>
 

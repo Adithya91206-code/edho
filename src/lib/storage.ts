@@ -118,11 +118,25 @@ class JSONStorage {
 
   // Crop methods
   getCrops(userId: string) {
-    return this.data.crops.filter(crop => crop.user_id === userId);
+    return this.data.crops.filter(crop => crop.user_id === userId).sort((a, b) => 
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
   }
 
   addCrop(crop: any) {
-    this.data.crops.push(crop);
+    // Ensure all required fields are present
+    const cropWithDefaults = {
+      ...crop,
+      name: crop.name || 'Unnamed Crop',
+      crop_type: crop.crop_type || 'Unknown',
+      harvest_date: crop.harvest_date || new Date().toISOString().split('T')[0],
+      expiry_date: crop.expiry_date || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      soil_type: crop.soil_type || 'Unknown',
+      pesticides_used: crop.pesticides_used || 'Not specified',
+      created_at: crop.created_at || new Date().toISOString()
+    };
+    
+    this.data.crops.push(cropWithDefaults);
     this.saveData();
   }
 
@@ -181,13 +195,19 @@ class JSONStorage {
   getCropsByFarmerId(farmerId: string) {
     const farmer = this.getFarmerByFarmerId(farmerId);
     if (!farmer) return [];
-    return this.data.crops.filter(crop => crop.user_id === farmer.id);
+    return this.data.crops.filter(crop => 
+      crop.user_id === farmer.id || 
+      (crop.farmer_info && crop.farmer_info.farmer_id === farmerId)
+    );
   }
 
   getCropsByDistributorId(distributorId: string) {
     const distributor = this.getDistributorByDistributorId(distributorId);
     if (!distributor) return [];
-    return this.data.crops.filter(crop => crop.user_id === distributor.id);
+    return this.data.crops.filter(crop => 
+      crop.user_id === distributor.id || 
+      (crop.distributor_info && crop.distributor_info.distributor_id === distributorId)
+    );
   }
 
   updateUser(userId: string, updates: any) {
