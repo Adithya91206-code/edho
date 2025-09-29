@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Filter, CreditCard as Edit, Trash2, Calendar, Wheat, Package, QrCode, ScanLine, Truck, Store, User, ShoppingCart, Brain } from 'lucide-react';
+import { Plus, Search, Filter, CreditCard as Edit, Trash2, Calendar, Wheat, Package, QrCode, ScanLine, Truck, Store, User, ShoppingCart, Brain, MessageCircle } from 'lucide-react';
 import { Crop } from '../types';
 import { useAuth } from '../hooks/useAuth';
 import { storage } from '../lib/storage';
@@ -9,7 +9,9 @@ import FarmerCropSelector from './FarmerCropSelector';
 import QRCodeModal from './QRCodeModal';
 import QRScannerModal from './QRScannerModal';
 import AIAnalysis from './AIAnalysis';
-import AIInsights from './AIInsights';
+import WeatherWidget from './WeatherWidget';
+import PriceTrends from './PriceTrends';
+import AIChatbot from './AIChatbot';
 
 const Dashboard: React.FC = () => {
   const [crops, setCrops] = useState<Crop[]>([]);
@@ -23,6 +25,7 @@ const Dashboard: React.FC = () => {
   const [showSupplyChainForm, setShowSupplyChainForm] = useState<Crop | null>(null);
   const [showFarmerCropSelector, setShowFarmerCropSelector] = useState(false);
   const [showAIAnalysis, setShowAIAnalysis] = useState<Crop | null>(null);
+  const [showChatbot, setShowChatbot] = useState(false);
 
   const { user } = useAuth();
 
@@ -160,7 +163,15 @@ const Dashboard: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="flex gap-6">
+      {/* Left Sidebar - Weather */}
+      <div className="w-80 space-y-6">
+        <WeatherWidget />
+        <PriceTrends />
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 space-y-6">
       {/* Header */}
       <div className="bg-white rounded-xl shadow-lg border border-orange-200 p-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -254,9 +265,6 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
       </div>
-
-      {/* AI Insights */}
-      <AIInsights />
 
       {/* Search and Filter */}
       <div className="bg-white rounded-xl shadow-lg border border-orange-200 p-6">
@@ -421,6 +429,22 @@ const Dashboard: React.FC = () => {
             </div>
           ))}
         </div>
+      )}
+      </div>
+
+      {/* AI Chatbot Toggle */}
+      <div className="fixed bottom-6 right-6 z-40">
+        <button
+          onClick={() => setShowChatbot(!showChatbot)}
+          className="bg-purple-600 hover:bg-purple-700 text-white p-4 rounded-full shadow-lg transition-all transform hover:scale-110"
+        >
+          <MessageCircle className="h-6 w-6" />
+        </button>
+      </div>
+
+      {/* AI Chatbot */}
+      {showChatbot && (
+        <AIChatbot onClose={() => setShowChatbot(false)} />
       )}
 
       {/* QR Code Modal */}
